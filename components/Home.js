@@ -15,6 +15,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [authError, setAuthError] = useState('');
+  const [signupSuccess, setSignupSuccess] = useState('');
 
   useEffect(() => {
     const getUser = async () => {
@@ -60,6 +61,7 @@ export default function Home() {
   const handleAuth = async (e) => {
     e.preventDefault();
     setAuthError(''); // Clear previous error
+    setSignupSuccess(''); // Clear success
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -67,7 +69,7 @@ export default function Home() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
         if (error) throw error;
-        alert('Check your email for confirmation!');
+        setSignupSuccess('Account created! Check your email for a confirmation link.');
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -136,8 +138,9 @@ export default function Home() {
             {isLogin ? 'Login' : 'Sign Up'}
           </button>
           {authError && <p style={{ color: 'red', marginTop: '10px' }}>{authError}</p>}
+          {signupSuccess && <p style={{ color: 'green', marginTop: '10px' }}>{signupSuccess}</p>}
         </form>
-        <p onClick={() => setIsLogin(!isLogin)} style={{ cursor: 'pointer', color: '#8b5a8c' }}>
+        <p onClick={() => { setIsLogin(!isLogin); setAuthError(''); setEmail(''); setPassword(''); setName(''); }} style={{ cursor: 'pointer', color: '#8b5a8c' }}>
           {isLogin ? 'Need an account? Sign up' : 'Have an account? Login'}
         </p>
       </div>
