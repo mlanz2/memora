@@ -14,6 +14,7 @@ export default function Home() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     const getUser = async () => {
@@ -58,6 +59,7 @@ export default function Home() {
 
   const handleAuth = async (e) => {
     e.preventDefault();
+    setAuthError(''); // Clear previous error
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -69,7 +71,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Auth error:', error);
-      alert('Auth error: ' + error.message);
+      setAuthError(error.message);
     }
   };
 
@@ -133,6 +135,7 @@ export default function Home() {
           <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#8b5a8c', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
             {isLogin ? 'Login' : 'Sign Up'}
           </button>
+          {authError && <p style={{ color: 'red', marginTop: '10px' }}>{authError}</p>}
         </form>
         <p onClick={() => setIsLogin(!isLogin)} style={{ cursor: 'pointer', color: '#8b5a8c' }}>
           {isLogin ? 'Need an account? Sign up' : 'Have an account? Login'}
