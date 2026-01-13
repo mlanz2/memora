@@ -16,11 +16,16 @@ export default function Home() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-      if (user) {
-        fetchReports();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+        setLoading(false);
+        if (user) {
+          fetchReports();
+        }
+      } catch (error) {
+        console.error('Error getting user:', error);
+        setLoading(false);
       }
     };
     getUser();
@@ -35,43 +40,55 @@ export default function Home() {
   }, []);
 
   const fetchReports = async () => {
-    const now = new Date();
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Sunday
-    startOfWeek.setHours(0, 0, 0, 0);
-    const { data, error } = await supabase
-      .from('reports')
-      .select('*, profiles(name)')
-      .gte('week_start', startOfWeek.toISOString().split('T')[0]);
-    if (error) console.error(error);
-    else setReports(data);
+    try {
+      const now = new Date();
+      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Sunday
+      startOfWeek.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*, profiles(name)')
+        .gte('week_start', startOfWeek.toISOString().split('T')[0]);
+      if (error) throw error;
+      setReports(data);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+    }
   };
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) alert(error.message);
-    } else {
-      const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
-      if (error) alert(error.message);
-      else alert('Check your email for confirmation!');
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
+        if (error) throw error;
+        alert('Check your email for confirmation!');
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      alert('Auth error: ' + error.message);
     }
   };
 
   const handleSubmitVerse = async (e) => {
     e.preventDefault();
-    const now = new Date();
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Sunday
-    startOfWeek.setHours(0, 0, 0, 0);
-    const { error } = await supabase
-      .from('reports')
-      .insert([{ user_id: user.id, week_start: startOfWeek.toISOString().split('T')[0], verses: [{ book, verses }] }]);
-    if (error) alert(error.message);
-    else {
+    try {
+      const now = new Date();
+      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Sunday
+      startOfWeek.setHours(0, 0, 0, 0);
+      const { error } = await supabase
+        .from('reports')
+        .insert([{ user_id: user.id, week_start: startOfWeek.toISOString().split('T')[0], verses: [{ book, verses }] }]);
+      if (error) throw error;
       alert('Submitted!');
       fetchReports();
       setBook('');
       setVerses('');
+    } catch (error) {
+      console.error('Error submitting verse:', error);
+      alert('Error submitting: ' + error.message);
     }
   };
 
